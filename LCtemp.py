@@ -89,6 +89,54 @@ def alpha_prevention(M, N):
                             N[z] = newsym
         return M, N
 
+def application(abstraction, variables): #takes a function definition and an arbitrary number of arguments, returns application of function to arguments. fails if number of symbols in abstraction and variables exceeds 52.
+    #perform alpha reduction to avoid naming conflicts
+    originalvariables = variables
+    abstraction, variables = alpha_prevention(abstraction, variables)
+    variables_string = ''
+    for c in range(0, len(variables)):
+        variables_string += str(variables[c])
+    if originalvariables != variables_string:
+        print('Changed original variables '+originalvariables+' to new variables '+variables_string)
+    #find arg part of abstraction
+    for i in range(0, len(abstraction)):
+        if abstraction[i]=='λ':
+            argstart = i
+    for j in range(argstart, len(abstraction)):
+        if abstraction[j] == '.':
+            argend = j
+    args=[]
+    for i in range(argstart+1, argend):
+        args.append(abstraction[i])
+    while len(variables)>0 and len(args)>0:
+        for j in range(argend+1, len(abstraction)):
+            if abstraction[j]==args[0]:
+                abstraction[j]=variables[0]
+        del args[0]
+        del variables[0]
+    if len(args) > len(variables):
+        newterm = ['λ']
+        newterm.extend(args)
+        newterm.append('.')
+        newterm.extend(abstraction[argend+1:])
+        newterm_string=''
+        for c in range(0, len(newterm)):
+            newterm_string += str(newterm[c])
+        return newterm_string
+    elif len(args) < len(variables):
+        newterm = abstraction[argend+1:]
+        newterm.extend(variables)
+        newterm_string=''
+        for c in range(0, len(newterm)):
+            newterm_string += str(newterm[c])
+        return newterm_string
+    elif len(args) == len(variables):
+        newterm = abstraction[argend+1:]
+        newterm_string=''
+        for c in range(0, len(newterm)):
+            newterm_string += str(newterm[c])
+        return newterm_string
+
 '''  
 numbers:
     0 == (λsz.z)
