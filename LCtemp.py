@@ -55,6 +55,40 @@ class Application(LambdaTerm):
 
     def reduce(self): raise NotImplementedError
 
+def alpha_prevention(M, N):
+    #gegeven twee lambdatermen, hernoemt deze fucntie alle variabelen in beide expressies zodat deze niet botsen.
+    
+    # omzetten naar lijst format als input een str is, anders onveranderd
+    M = [M[a] for a in range(0, len(M))]
+    N = [N[a] for a in range(0, len(N))]
+    
+    def list_symbols(lambdaterm):
+        #Geeft een lijst van alle symbolen in een lambdaterm.
+        #Nodig voor het voorkomen van fouten door gelijke symbolen, door alfareductie.
+        symbols = []
+        for i in range(0, len(lambdaterm)):
+            if not lambdaterm[i] in ['(', ')', 'λ', '.', ' ']:
+                if not lambdaterm[i] in symbols:
+                    symbols.append(lambdaterm[i])
+        return symbols
+
+    Msym = list_symbols(M)
+    Nsym = list_symbols(N)
+    if not bool(set(Msym)&set(Nsym)):
+        return M, N
+    else:
+        for i in range(0,len(Msym)):
+            for k in range(0, len(N)):
+                if N[k] == Msym[i]:
+                    newsym = N[k]
+                    while newsym in Nsym or newsym in Msym:
+                        newsym = chr((((ord(newsym)+1)-97)%26)+97) #finds next unused symbol by scrolling through ASCII codes
+                    Nsym.append(newsym)
+                    for z in range(0, len(N)):
+                        if N[z] == N[k]:
+                            N[z] = newsym
+        return M, N
+
 '''  
 numbers:
     0 == (λsz.z)
