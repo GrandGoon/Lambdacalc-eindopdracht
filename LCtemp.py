@@ -6,7 +6,25 @@ class LambdaTerm:
 
     def fromstring(self):
         """Construct a lambda term from a string."""
-        raise NotImplementedError
+        result = []
+        temp = ''
+
+        for char in self:
+            if char in ['(', ')', '.', ' ', '\\']:
+                if temp != '':
+                    result.append(temp)
+                    temp = ''
+                if char != ' ':
+                    result.append(char)
+            else:
+                temp = temp + char
+
+        if temp != '':
+            result.append(temp)
+
+        return result
+
+        
 
     def substitute(self, rules):
         """Substitute values for keys where they occur."""
