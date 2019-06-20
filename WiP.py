@@ -88,7 +88,9 @@ def application(abstraction, variables):
         for c in range(0, len(newterm)):
             newterm_string += str(newterm[c])
         return newterm_string
-    
+
+
+
 '''
 numbers:
     0 == (λsz.z)
