@@ -10,7 +10,7 @@ test
 def alpha_prevention(M, N):
     #gegeven twee lambdatermen, hernoemt deze fucntie alle variabelen in beide expressies zodat deze niet botsen.
     
-    # omzetten naar lijst format als input een str is, anders onveranderd
+    # omzetten naar list format als input een str is, anders onveranderd
     M = [M[a] for a in range(0, len(M))]
     N = [N[a] for a in range(0, len(N))]
     
