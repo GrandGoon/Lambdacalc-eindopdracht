@@ -4,6 +4,8 @@
 #and x=Variable('x'), calculating Id(x) gives Variable('x'), which is fair enough,
 # but then printing Id gives Abstraction(Variable('a'), Variable('x')), which is nothing like the original function.
 
+#ISSUE: substitution doesn't work for substituting anything but Variables by anything but Variables.
+
 class LambdaTerm:
     """Abstract Base Class for lambda terms."""
 
@@ -17,8 +19,6 @@ class LambdaTerm:
             return Variable(self[1]), self.fromstring(self[2::])
         elif self[0::] == '':
             return
-        
-        
 
     def substitute(self, rules):
         """Substitute values for keys where they occur."""
@@ -41,6 +41,8 @@ class Variable(LambdaTerm):
         if self.symbol == rules[0].symbol:
             self.symbol = rules[1].symbol
         return self
+    def reduce(self):   #extra function to stop recursive reduction when recurson of Application reaches this class
+        return self
 
 class Abstraction(LambdaTerm):
     """Represents a lambda term of the form (λx.M)."""
@@ -59,6 +61,9 @@ class Abstraction(LambdaTerm):
     def substitute(self, rules): #given new variable should never collide with bound variable! also, we assume that variable in self.variable is immutable
         self.body = self.body.substitute(rules)
         return self
+    def reduce(self):   #extra function to facilitate recursive reduction when recurson of Application encounters this class
+        self.body=self.body.reduce()
+        return self
 
 class Application(LambdaTerm):
     """Represents a lambda term of the form (M N)."""
@@ -69,13 +74,32 @@ class Application(LambdaTerm):
     def __repr__(self):
         return 'Application('+repr(self.function)+', '+repr(self.argument)+')'
     def __str__(self):
-        return str(self.function)+str(self.argument)
+        return '('+str(self.function)+str(self.argument)+')'
     def substitute(self, rules):
         self.function.substitute(rules)
         self.argument.substitute(rules)
         return self
     def reduce(self): 
-        if type(self.function) == Abstraction:
+        if type(self.function) == Abstraction and type(self.argument) == Variable:
             return self.function.body.substitute([self.function.variable, self.argument])
-        else:
+        elif type(self.function) == Abstraction and type(self.argument) == Application:
+            self.argument = self.argument.reduce()
+            return self.function.body.substitute([self.function.variable, self.argument])
+        elif type(self.function) == Variable:
+            self.argument = self.argument.reduce()
             return self
+        elif type(self.function) == Abstraction and type(self.argument) == Abstraction:
+            z = self.function.body.substitute([self.function.variable, self.argument])
+            return z.reduce()
+        elif type(self.function) == Application and type(self.argument) != Application:
+            self.function=self.function.reduce()
+            return self.reduce()
+        elif type(self.function) != Application and type(self.argument) == Application:
+            self.argument = self.argument.reduce()
+        elif type(self.function) == Application and type(self.argument) == Application:
+            self.function = self.function.reduce()
+            self.argument = self.argument.reduce()
+            return self.reduce()
+        else:
+            return (type(self.function), type(self.argument)) #more cases?
+            
