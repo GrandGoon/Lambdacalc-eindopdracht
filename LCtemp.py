@@ -9,7 +9,16 @@ class LambdaTerm:
 
     def fromstring(self):
         """Construct a lambda term from a string."""
-        raise NotImplementedError
+        if self[0] == '\\':
+            return Abstraction(Variable(self[1]), self.fromstring(self[2::]))
+        elif self[0] not in ['(', ')', '.', ' ','\\']:
+            return Abstraction(Variable(self[1]), self.fromstring(self[1::]))
+        elif self[0] == '.':
+            return Variable(self[1]), self.fromstring(self[2::])
+        elif self[0::] == '':
+            return
+        
+        
 
     def substitute(self, rules):
         """Substitute values for keys where they occur."""
