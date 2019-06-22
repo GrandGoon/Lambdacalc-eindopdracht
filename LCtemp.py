@@ -29,7 +29,7 @@ class LambdaTerm:
         haakjes = dict_parentheses(self)
         traverser = 0
         #start Term.
-        if self[0] not in ['(', '@', 'λ', ')']: #found a variable.
+        if self[0] not in ['(', '@', 'λ', ')', ' ', '\\']: #found a variable. Works with all acceptable notations.
             Term = Variable(self[0])
             traverser = 1
         elif self[0] == '(': #evaluate Term within parentheses.
@@ -54,7 +54,7 @@ class LambdaTerm:
         raise NotImplementedError
     def reduce(self):
         """Beta-reduce."""
-        raise NotImplementedError
+        pass
 
 class Variable(LambdaTerm):
     """Represents a variable."""
