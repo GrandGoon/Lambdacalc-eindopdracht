@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 
-#Issues: Calling An abstraction leaves the Abstraction itself permanently changed; for Id=Application(Variable('a'), Variable('a')) 
-#and x=Variable('x'), calculating Id(x) gives Variable('x'), which is fair enough,
-# but then printing Id gives Abstraction(Variable('a'), Variable('x')), which is nothing like the original function. RESOLVED
-
-#ISSUE: substitution doesn't work for substituting anything but Variables by anything but Variables. RESOLVED
-
 class LambdaTerm:
     """Abstract Base Class for lambda terms."""
 
@@ -65,7 +59,7 @@ class Variable(LambdaTerm):
     def __str__(self):
         return str(self.symbol)
     def substitute(self, rules):
-        #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
+        #let rules always be given in format [a, b] where a is the variable that should be replaced by lambdaterm b.
         if self.symbol == rules[0].symbol:
             return rules[1]
         return self
@@ -75,7 +69,7 @@ class Variable(LambdaTerm):
 class Abstraction(LambdaTerm):
     """Represents a lambda term of the form (λx.M)."""
 
-    def __init__(self, variable, body): #alpha conversie!
+    def __init__(self, variable, body):
         self.variable = variable
         self.body = body
     def __repr__(self):
