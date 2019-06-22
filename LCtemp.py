@@ -11,6 +11,7 @@ class LambdaTerm:
 
     def fromstring(self):
         """Construct a lambda term from a string."""
+        ''' #Davy's fromstring
         if self[0] == '\\':
             return Abstraction(Variable(self[1]), self.fromstring(self[2::]))
         elif self[0] not in ['(', ')', '.', ' ','\\']:
@@ -19,7 +20,47 @@ class LambdaTerm:
             return Variable(self[1]), self.fromstring(self[2::])
         elif self[0::] == '':
             return
-
+        ''' 
+        def dict_parentheses(string): #makes a dictionary that matches indices of opening parentheses to indices of corresponging closing parentheses.
+            istart = []
+            parentheses_dict = {}
+            for i, c in enumerate(string):
+                if c == '(':
+                     istart.append(i)
+                if c == ')':
+                    try:
+                        parentheses_dict[istart.pop()] = i
+                    except IndexError:
+                        return 'Error: invalid string, too many closing parentheses'
+            if istart:  # check if stack is empty afterwards
+                return 'Error: invalid string, too many opening parentheses'
+            return parentheses_dict
+        
+        haakjes = dict_parentheses(self)
+        traverser = 0
+        #start Term.
+        if self[0] not in ['(', '@', 'λ']: #found a variable.
+            Term = Variable(self[0])
+            traverser = 1
+        elif self[0] == '(': #evaluate Term within parentheses.
+            Term = LambdaTerm.fromstring(self[1:haakjes[0]])
+            traverser = haakjes[0]+1
+        else: #@ or λ can only be encountered at start of string, thus
+            Term = Abstraction(Variable(self[1]), LambdaTerm.fromstring(self[3:]))
+            traverser = len(self)
+        while traverser < len(self):
+            if traverser not in ['(', '@', 'λ']: #found a variable.
+                Term = Application(Term, Variable(self[traverser]))
+                traverser+=1
+            elif traverser == '(': #evaluate term in parentheses
+                Term = Application(Term, LambdaTerm.fromstring(self[traverser+1:haakjes[traverser]]))
+                traverser=haakjes[traverser]+1
+            else: return "illegal string" #@ or λ can only be encountered at start of string.
+        return Term
+                
+                
+        
+    
     def substitute(self, rules):
         """Substitute values for keys where they occur."""
         #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
