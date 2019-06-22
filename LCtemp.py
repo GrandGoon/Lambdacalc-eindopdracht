@@ -82,7 +82,7 @@ class Abstraction(LambdaTerm):
     def __repr__(self):
         return "Abstraction("+repr(self.variable)+', '+repr(self.body)+')'
     def __str__(self):
-        return '(λ'+str(self.variable)+'.'+str(self.body)+')'
+        return 'λ'+str(self.variable)+'.'+str(self.body)
     def __call__(self, argument):
         copy = self
         return Application(copy, argument).reduce()
@@ -102,10 +102,13 @@ class Application(LambdaTerm):
     def __repr__(self):
         return 'Application('+repr(self.function)+', '+repr(self.argument)+')'
     def __str__(self):
-        if type(self.argument) == Application:
-            return str(self.function)+'('+str(self.argument)+')'
-        else:
-            return str(self.function)+str(self.argument)
+        if type(self.function) == Abstraction: a = '('+str(self.function)+')'
+        if type(self.function) == Application: a = str(self.function)
+        if type(self.function) == Variable: a = str(self.function)
+        if type(self.argument) == Abstraction: b = '('+str(self.argument)+')'
+        if type(self.argument) == Application: b = str(self.argument)
+        if type(self.argument) == Variable: b = str(self.argument)
+        return a+b
     def substitute(self, rules):
         self.function.substitute(rules)
         self.argument.substitute(rules)
