@@ -102,7 +102,10 @@ class Application(LambdaTerm):
     def __repr__(self):
         return 'Application('+repr(self.function)+', '+repr(self.argument)+')'
     def __str__(self):
-        return '('+str(self.function)+str(self.argument)+')'
+        if type(self.argument) == Application:
+            return str(self.function)+'('+str(self.argument)+')'
+        else:
+            return str(self.function)+str(self.argument)
     def substitute(self, rules):
         self.function.substitute(rules)
         self.argument.substitute(rules)
