@@ -1,130 +1,132 @@
 #!/usr/bin/env python3
 
+#Issues: Calling An abstraction leaves the Abstraction itself permanently changed; for Id=Application(Variable('a'), Variable('a'))
+#and x=Variable('x'), calculating Id(x) gives Variable('x'), which is fair enough,
+# but then printing Id gives Abstraction(Variable('a'), Variable('x')), which is nothing like the original function.
+
+#ISSUE: substitution doesn't work for substituting anything but Variables by anything but Variables.
 
 class LambdaTerm:
     """Abstract Base Class for lambda terms."""
 
     def fromstring(self):
         """Construct a lambda term from a string."""
-        raise NotImplementedError
+        def dict_parentheses(string): #makes a dictionary that matches indices of opening parentheses to indices of corresponging closing parentheses.
+            istart = []
+            parentheses_dict = {}
+            for i, c in enumerate(string):
+                if c == '(':
+                     istart.append(i)
+                if c == ')':
+                    try:
+                        parentheses_dict[istart.pop()] = i
+                    except IndexError:
+                        return 'Error: invalid string, too many closing parentheses'
+            if istart:  # check if stack is empty afterwards
+                return 'Error: invalid string, too many opening parentheses'
+            return parentheses_dict
+
+        haakjes = dict_parentheses(self)
+        traverser = 0
+        #start Term.
+        if self[0] not in ['(', '@', 'λ', ')']: #found a variable.
+            Term = Variable(self[0])
+            traverser = 1
+        elif self[0] == '(': #evaluate Term within parentheses.
+            Term = LambdaTerm.fromstring(self[1:haakjes[0]])
+            traverser = haakjes[0]+1
+        else: #@ or λ can only be encountered at start of string, thus
+            Term = Abstraction(Variable(self[1]), LambdaTerm.fromstring(self[3:]))
+            traverser = len(self)
+        while traverser < len(self):
+            if self[traverser] not in ['(', '@', 'λ', ')']: #found a variable.
+                Term = Application(Term, Variable(self[traverser]))
+                traverser+=1
+            elif self[traverser] == '(': #evaluate term in parentheses
+                Term = Application(Term, LambdaTerm.fromstring(self[traverser+1:haakjes[traverser]]))
+                traverser=haakjes[traverser]+1
+            else: return "illegal string" #@ or λ can only be encountered at start of string.
+        return Term
 
     def substitute(self, rules):
         """Substitute values for keys where they occur."""
+        #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
         raise NotImplementedError
-
     def reduce(self):
         """Beta-reduce."""
         raise NotImplementedError
 
-
 class Variable(LambdaTerm):
     """Represents a variable."""
-    def __init__(self, symbol): raise NotImplementedError
-
-    def __repr__(self): raise NotImplementedError
-
-    def __str__(self): raise NotImplementedError
-
-    def substitute(self, rules): raise NotImplementedError
-
+    def __init__(self, symbol):
+        self.symbol = symbol
+    def __repr__(self):
+        return 'Variable('+repr(self.symbol)+')'
+    def __str__(self):
+        return str(self.symbol)
+    def substitute(self, rules):
+        #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
+        if self.symbol == rules[0].symbol:
+            self.symbol = rules[1].symbol
+        return self
+    def reduce(self):   #extra function to stop recursive reduction when recurson of Application reaches this class
+        return self
 
 class Abstraction(LambdaTerm):
     """Represents a lambda term of the form (λx.M)."""
 
-    def __init__(self, variable, body): raise NotImplementedError
-
-    def __repr__(self): raise NotImplementedError
-
-    def __str__(self): raise NotImplementedError
-
-    def __call__(self, argument): raise NotImplementedError
-
-    def substitute(self, rules): raise NotImplementedError
-
+    def __init__(self, variable, body): #alpha conversie!
+        self.variable = variable
+        self.body = body
+        self.rewind = self
+    def __repr__(self):
+        return "Abstraction("+repr(self.variable)+', '+repr(self.body)+')'
+    def __str__(self):
+        return '(λ'+str(self.variable)+'.'+str(self.body)+')'
+    def __call__(self, argument):
+        copy = self
+        return Application(copy, argument).reduce()
+    def substitute(self, rules): #given new variable should never collide with bound variable! also, we assume that variable in self.variable is immutable
+        self.body = self.body.substitute(rules)
+        return self
+    def reduce(self):   #extra function to facilitate recursive reduction when recurson of Application encounters this class
+        self.body=self.body.reduce()
+        return self
 
 class Application(LambdaTerm):
     """Represents a lambda term of the form (M N)."""
 
-    def __init__(self, function, argument): raise NotImplementedError
-
-    def __repr__(self): raise NotImplementedError
-
-    def __str__(self): raise NotImplementedError
-
-    def substitute(self, rules): raise NotImplementedError
-
-    def reduce(self): raise NotImplementedError
-
-'''  
-numbers:
-    0 == (λsz.z)
-    1 == (λsz.s(sz))
-    2 == (λsz.s(s(sz)))
-
-succession:
-    Name: S
-    Profile: (λxyz.y(xyz))
-    inputs: m
-    outputs: n = m+1
-    Usage: Sm
-
-Addition:
-    Name: A
-    Profile: S == (λxyz.y(xyz))
-    inputs: a, b
-    outputs: c = a+b
-    Usage: aAb
-
-Multiplication:
-    Name: M
-    Profile: (λxyz.x(yz))
-    inputs: a,b
-    outputs: c = a*b
-    Usage: Mab
-    
-Predecessor:
-    Name: P
-    Profile: ((λn.nQ(λz.z00))F)1
-    where
-        Name: Q
-        Profile: Profile: (λpz.z(S(pT))(pT))
-        inputs: (a, b)
-        outputs: (S(a), b)
-        usage: Q(a,b)
-    and F will be defined down below
-    inputs: N, where N is a natural number
-    outputs: N-1 
-    Usage: PN
-
-Subtraction:
-    Name: B
-    Profile: (λxy.yPx)
-    inputs: m, n
-    outputs: l = m - n
-    Usage: Bmn
-
-Booleans:
-    True: T == (λsz.s)
-    False: F == 0 == (λsz.z)
-    
-AND operator:
-    Name: ∧
-    Profile: (λxy.xy(λuv.v)) == λxy.xyF
-    inputs: M, N
-    outputs: M ∧ N == (T or F)
-    Usage: ∧MN
-    
-OR operator:
-    Name: ∨
-    Profile: (λxy.x(λuv.u)y) == λxy.xTy
-    inputs: M, N
-    outputs: M ∨ N == (T or F)
-    Usage: ∨MN
-
-Negation:
-    Name: ¬
-    Profile: (λx.x(λuv.v)(λab.a)) == λx.xFT
-    inputs: M
-    outputs: N == negation of M
-    Usage: ¬ M
-'''
+    def __init__(self, function, argument): #implementeer Alfa-conversie om name collisions te voorkomen
+        self.function = function
+        self.argument = argument
+    def __repr__(self):
+        return 'Application('+repr(self.function)+', '+repr(self.argument)+')'
+    def __str__(self):
+        return '('+str(self.function)+str(self.argument)+')'
+    def substitute(self, rules):
+        self.function.substitute(rules)
+        self.argument.substitute(rules)
+        return self
+    def reduce(self):
+        if type(self.function) == Abstraction and type(self.argument) == Variable:
+            return self.function.body.substitute([self.function.variable, self.argument])
+        elif type(self.function) == Abstraction and type(self.argument) == Application:
+            self.argument = self.argument.reduce()
+            return self.function.body.substitute([self.function.variable, self.argument])
+        elif type(self.function) == Variable:
+            self.argument = self.argument.reduce()
+            return self
+        elif type(self.function) == Abstraction and type(self.argument) == Abstraction:
+            z = self.function.body.substitute([self.function.variable, self.argument])
+            return z.reduce()
+        elif type(self.function) == Application and type(self.argument) != Application:
+            self.function=self.function.reduce()
+            return self.reduce()
+        elif type(self.function) != Application and type(self.argument) == Application:
+            self.argument = self.argument.reduce()
+        elif type(self.function) == Application and type(self.argument) == Application:
+            self.function = self.function.reduce()
+            self.argument = self.argument.reduce()
+            return self.reduce()
+        else:
+            return (type(self.function), type(self.argument)) #more cases?
