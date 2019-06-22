@@ -2,9 +2,9 @@
 
 #Issues: Calling An abstraction leaves the Abstraction itself permanently changed; for Id=Application(Variable('a'), Variable('a')) 
 #and x=Variable('x'), calculating Id(x) gives Variable('x'), which is fair enough,
-# but then printing Id gives Abstraction(Variable('a'), Variable('x')), which is nothing like the original function.
+# but then printing Id gives Abstraction(Variable('a'), Variable('x')), which is nothing like the original function. RESOLVED
 
-#ISSUE: substitution doesn't work for substituting anything but Variables by anything but Variables.
+#ISSUE: substitution doesn't work for substituting anything but Variables by anything but Variables. RESOLVED
 
 class LambdaTerm:
     """Abstract Base Class for lambda terms."""
@@ -52,9 +52,9 @@ class LambdaTerm:
         """Substitute values for keys where they occur."""
         #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
         raise NotImplementedError
-   # def reduce(self):
-    #    """Beta-reduce."""
-     #   raise NotImplementedError
+    def reduce(self):
+        """Beta-reduce."""
+        raise NotImplementedError
 
 class Variable(LambdaTerm):
     """Represents a variable."""
@@ -67,7 +67,7 @@ class Variable(LambdaTerm):
     def substitute(self, rules):
         #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
         if self.symbol == rules[0].symbol:
-            self.symbol = rules[1].symbol
+            return rules[1]
         return self
     def reduce(self):   #extra function to stop recursive reduction when recurson of Application reaches this class
         return self
