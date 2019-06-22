@@ -89,7 +89,20 @@ def application(abstraction, variables):
             newterm_string += str(newterm[c])
         return newterm_string
 
-
+def dict_parentheses(string): #makes a dictionary that matches indices of opening parentheses to indices of corresponging closing parentheses.
+    istart = []
+    parentheses_dict = {}
+    for i, c in enumerate(string):
+        if c == '(':
+             istart.append(i)
+        if c == ')':
+            try:
+                parentheses_dict[istart.pop()] = i
+            except IndexError:
+                return 'Error: invalid string, too many closing parentheses'
+    if istart:  # check if stack is empty afterwards
+        return 'Error: invalid string, too many opening parentheses'
+    return parentheses_dict
 
 '''
 numbers:
