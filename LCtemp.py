@@ -78,7 +78,6 @@ class Abstraction(LambdaTerm):
     def __init__(self, variable, body): #alpha conversie!
         self.variable = variable
         self.body = body
-        self.rewind = self
     def __repr__(self):
         return "Abstraction("+repr(self.variable)+', '+repr(self.body)+')'
     def __str__(self):
@@ -87,8 +86,8 @@ class Abstraction(LambdaTerm):
         copy = self
         return Application(copy, argument).reduce()
     def substitute(self, rules): #given new variable should never collide with bound variable! also, we assume that variable in self.variable is immutable
-        self.body = self.body.substitute(rules)
-        return self
+        z = self.body.substitute(rules)
+        return Abstraction(self.variable, z)
     def reduce(self):   #extra function to facilitate recursive reduction when recurson of Application encounters this class
         self.body=self.body.reduce()
         return self
@@ -110,9 +109,9 @@ class Application(LambdaTerm):
         if type(self.argument) == Variable: b = str(self.argument)
         return a+b
     def substitute(self, rules):
-        self.function.substitute(rules)
-        self.argument.substitute(rules)
-        return self
+        a = self.function.substitute(rules)
+        b = self.argument.substitute(rules)
+        return Application(a, b)
     def reduce(self): 
         if type(self.function) == Abstraction and type(self.argument) == Variable:
             return self.function.body.substitute([self.function.variable, self.argument])
