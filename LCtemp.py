@@ -3,7 +3,7 @@
 import itertools
 
 class LambdaTerm:
-    """Abstract Base Class for lambda terms."""
+    """Abstract base class for lambda terms."""
 
     def __eq__(self, other): #tests if given lambda Terms are alpha-equivalent after beta-reduction
         def full_sub(sub, substr, perm): #sub denotes list of symbols in str to be subsituted, substr denotes said string, perm denotes what the symbols are to be substituted with
@@ -37,7 +37,6 @@ class LambdaTerm:
             if len(selfsyms) == len(othersyms):
                 permstocheck = list(itertools.permutations(selfsyms))
                 for i in range(0, len(permstocheck)):
-
                     if selfstr == full_sub(othersyms, otherstr, permstocheck[i]):
                         alpha_eq = True
                         break
@@ -65,7 +64,7 @@ class LambdaTerm:
         haakjes = dict_parentheses(self)
         traverser = 0
         #start Term.
-        if self[0] not in ['(', '@', 'λ', ')']: #found a variable.
+        if self[0] not in ['(', '@', 'λ', ')', '\\']: #found a variable.
             Term = Variable(self[0])
             traverser += 1
         elif self[0] == '(': #evaluate Term within parentheses.
@@ -75,7 +74,7 @@ class LambdaTerm:
             Term = Abstraction(Variable(self[1]), LambdaTerm.fromstring(self[3:]))
             traverser = len(self)
         while traverser < len(self):
-            if self[traverser] not in ['(', '@', 'λ', ')', ' ']: #found a variable.
+            if self[traverser] not in ['(', '@', 'λ', ')', ' ', '\\']: #found a variable.
                 Term = Application(Term, Variable(self[traverser]))
                 traverser+=1
             elif self[traverser] == '(': #evaluate term in parentheses
