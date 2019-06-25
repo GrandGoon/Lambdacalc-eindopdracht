@@ -84,15 +84,7 @@ class LambdaTerm:
                 traverser += 1
             else: return "illegal string" #@ or λ can only be encountered at start of string.
         return Term
-''' DISCONTINUED
-    def substitute(self, rules):
-        """Substitute values for keys where they occur."""
-        #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
-        raise NotImplementedError
-    def reduce(self):
-        """Beta-reduce."""
-        raise NotImplementedError
-'''
+
 class Variable(LambdaTerm):
     """Represents a variable."""
     def __init__(self, symbol):
@@ -171,5 +163,5 @@ class Application(LambdaTerm):
             self.argument = self.argument.reduce()
             return self.reduce()
         else:
-            return (type(self.function), type(self.argument)) #more cases?
+            return (type(self.function), type(self.argument)) 
             
