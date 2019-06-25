@@ -1,7 +1,47 @@
 #!/usr/bin/env python3
 
+import itertools
+
 class LambdaTerm:
     """Abstract Base Class for lambda terms."""
+
+    def __eq__(self, other): #tests if given lambda Terms are alpha-equivalent after beta-reduction
+        def full_sub(sub, substr, perm): #sub denotes list of symbols in str to be subsituted, substr denotes said string, perm denotes what the symbols are to be substituted with
+            mal = [0]*(len(substr))
+            newstr = ''
+            for i in range(0, len(substr)):
+                if substr[i] in ['(', ')', '@', 'λ', '\\', '.', ' ']:
+                    mal[i]=substr[i]
+            for i in range(0, len(perm)):
+                for k in range(0, len(substr)):
+                    if substr[k] == sub[i]:
+                        mal[k] = perm[i]
+            for i in range(0, len(mal)):
+                newstr += str(mal[i])
+            return newstr
+        alpha_eq=False
+        self=self.reduce()
+        other=other.reduce()
+        if type(self) == type(other):
+            #try permutations
+            selfstr=str(self)
+            otherstr=str(other)
+            selfsyms = []
+            othersyms = []
+            for i in range(0, len(selfstr)):
+                if selfstr[i] not in selfsyms and selfstr[i] not in ['(', ')', '@', 'λ', '\\', '.', ' ']:
+                    selfsyms.append(selfstr[i])
+            for i in range(0, len(otherstr)):
+                if otherstr[i] not in othersyms and otherstr[i] not in ['(', ')', '@', 'λ', '\\', '.', ' ']:
+                    othersyms.append(otherstr[i])
+            if len(selfsyms) == len(othersyms):
+                permstocheck = list(itertools.permutations(selfsyms))
+                for i in range(0, len(permstocheck)):
+
+                    if selfstr == full_sub(othersyms, otherstr, permstocheck[i]):
+                        alpha_eq = True
+                        break
+        return alpha_eq
 
     def fromstring(self):
         """Construct a lambda term from a string."""
@@ -45,7 +85,7 @@ class LambdaTerm:
                 traverser += 1
             else: return "illegal string" #@ or λ can only be encountered at start of string.
         return Term
-
+''' DISCONTINUED
     def substitute(self, rules):
         """Substitute values for keys where they occur."""
         #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
@@ -53,7 +93,7 @@ class LambdaTerm:
     def reduce(self):
         """Beta-reduce."""
         raise NotImplementedError
-
+'''
 class Variable(LambdaTerm):
     """Represents a variable."""
     def __init__(self, symbol):
