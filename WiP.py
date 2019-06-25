@@ -111,9 +111,9 @@ def full_sub(sub, substr, perm): #sub denotes list of symbols in str to be subsi
         if substr[i] in ['(', ')', '@', 'λ', '\\', '.', ' ']:
             mal[i]=substr[i]
     for i in range(0, len(perm)):
-        for i in range(0, len(substr)):
-            if substr[i] == sub[i]:
-                mal[i] = perm[i]
+        for k in range(0, len(substr)):
+            if substr[k] == sub[i]:
+                mal[k] = perm[i]
     for i in range(0, len(mal)):
         newstr += str(mal[i])
     return newstr
