@@ -104,6 +104,20 @@ def dict_parentheses(string): #makes a dictionary that matches indices of openin
         return 'Error: invalid string, too many opening parentheses'
     return parentheses_dict
 
+def full_sub(sub, substr, perm): #sub denotes list of symbols in str to be subsituted, substr denotes said string, perm denotes what the symbols are to be substituted with
+    mal = [0]+len(substr)
+    newstr = ''
+    for i in range(0, len(substr)):
+        if substr[i] in ['(', ')', '@', 'λ', '\\', '.', ' ']:
+            mal[i]=substr[i]
+    for i in range(0, len(perm)):
+        for i in range(0, len(substr)):
+            if substr[i] == sub[i]:
+                mal[i] = perm[i]
+    for i in range(0, len(mal)):
+        newstr += str(mal[i])
+    return newstr
+
 '''
 numbers:
     0 == (λsz.z)
