@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 
-#Issues: Calling An abstraction leaves the Abstraction itself permanently changed; for Id=Application(Variable('a'), Variable('a'))
-#and x=Variable('x'), calculating Id(x) gives Variable('x'), which is fair enough,
-# but then printing Id gives Abstraction(Variable('a'), Variable('x')), which is nothing like the original function.
 
-#ISSUE: substitution doesn't work for substituting anything but Variables by anything but Variables.
 
 class LambdaTerm:
     """Abstract base class for lambda terms."""
@@ -12,7 +8,7 @@ class LambdaTerm:
     def fromstring(self):
         """Construct a lambda term from a string."""
         self = self.strip()
-        def dict_parentheses(string): #makes a dictionary that matches indices of opening parentheses to indices of corresponging closing parentheses.
+        def dict_parentheses(string): #Makes a dictionary that matches indices of opening parentheses to indices of corresponging closing parentheses.
             istart = []
             parentheses_dict = {}
             for i, c in enumerate(string):
@@ -29,35 +25,39 @@ class LambdaTerm:
 
         haakjes = dict_parentheses(self)
         traverser = 0
-        #start Term.
-        if self[0] not in ['(', '@', 'λ', ')', '\\']: #found a variable. Works with all acceptable notations.
+        #Start Term.
+        if self[0] not in ['(', '@', 'λ', ')', '\\']:  #Found a variable.
             Term = Variable(self[0])
             traverser = 1
-        elif self[0] == '(': #evaluate Term within parentheses.
+        elif self[0] == '(':  #evaluate Term within parentheses.
             Term = LambdaTerm.fromstring(self[1:haakjes[0]])
             traverser = haakjes[0]+1
-        else: #@ or λ can only be encountered at start of string, thus
+        else:  #@ or λ or \ can only be encountered at start of string, thus
             Term = Abstraction(Variable(self[1]), LambdaTerm.fromstring(self[3:]))
             traverser = len(self)
         while traverser < len(self):
-            if self[traverser] not in ['(', '@', 'λ', ')', '\\']: #found a variable.
+            if self[traverser] not in ['(', '@', 'λ', ')', '\\']:  #found a variable.
                 Term = Application(Term, Variable(self[traverser]))
                 traverser+=1
-            elif self[traverser] == '(': #evaluate term in parentheses
+            elif self[traverser] == '(':  #Evaluate term in parentheses
                 Term = Application(Term, LambdaTerm.fromstring(self[traverser+1:haakjes[traverser]]))
                 traverser=haakjes[traverser]+1
             elif self[traverser] == ' ':
                 traverser += 1
-            else: return "illegal string" #@ or λ can only be encountered at start of string.
+            else: return "illegal string"  #@ or λ can only be encountered at start of string.
         return Term
 
-    def substitute(self, rules):
-        """Substitute values for keys where they occur."""
-        #let rules always be given in format [a, b] where a is the variable that should be replaced by variable b.
-        raise NotImplementedError
+
     def reduce(self):
-        """Beta-reduce."""
-        pass
+        """Automatically runs the correct reduction function when reduce() is called from LambdaTerm"""
+        if isinstance (self, Variable):
+            return Variable.reduce(self)
+        elif isinstance (self, Abstraction):
+            return Abstraction.reduce(self)
+        else:
+            return Application.reduce(self)
+
+
 
 class Variable(LambdaTerm):
     """Represents a variable."""
@@ -72,13 +72,13 @@ class Variable(LambdaTerm):
         if self.symbol == rules[0].symbol:
             self.symbol = rules[1].symbol
         return self
-    def reduce(self):   #extra function to stop recursive reduction when recurson of Application reaches this class
+    def reduce(self):   #Extra function to stop recursive reduction when recurson of Application reaches this class
         return self
 
 class Abstraction(LambdaTerm):
     """Represents a lambda term of the form (λx.M)."""
 
-    def __init__(self, variable, body): #alpha conversie!
+    def __init__(self, variable, body):
         self.variable = variable
         self.body = body
         self.rewind = self
@@ -89,17 +89,17 @@ class Abstraction(LambdaTerm):
     def __call__(self, argument):
         copy = self
         return Application(copy, argument).reduce()
-    def substitute(self, rules): #given new variable should never collide with bound variable! also, we assume that variable in self.variable is immutable
+    def substitute(self, rules): #Given new variable should never collide with bound variable! also, we assume that variable in self.variable is immutable
         self.body = self.body.substitute(rules)
         return self
-    def reduce(self):   #extra function to facilitate recursive reduction when recurson of Application encounters this class
+    def reduce(self):   #Extra function to facilitate recursive reduction when recurson of Application encounters this class
         self.body=self.body.reduce()
         return self
 
 class Application(LambdaTerm):
     """Represents a lambda term of the form (M N)."""
 
-    def __init__(self, function, argument): #implementeer Alfa-conversie om name collisions te voorkomen
+    def __init__(self, function, argument): #Implementeer Alfa-conversie om name collisions te voorkomen
         self.function = function
         self.argument = argument
     def __repr__(self):
@@ -132,4 +132,4 @@ class Application(LambdaTerm):
             self.argument = self.argument.reduce()
             return self.reduce()
         else:
-            return (type(self.function), type(self.argument)) #more cases?
+            return (type(self.function), type(self.argument))
