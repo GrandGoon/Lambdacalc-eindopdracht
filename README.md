@@ -14,6 +14,5 @@ Nog te implementeren:
 Scrapped:
 preventieve Alfa-conversie toevoegen bij initiëren van Applicatie
 	>>Note: dit doen we om functionaliteit te behouden
-reductie en substitutie definieëren onder Abstract Base Class
-	>>alternatieve oplossing los van template
+
 
