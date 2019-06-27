@@ -87,6 +87,15 @@ class LambdaTerm:
         return Term
 
 
+    def substitute(self, rules): #Let rules always be given in format [a, b] where a is the variable that should be replaced by lambdaterm b.
+        if isinstance(self, Variable):
+            return Variable.substitute(self, rules)
+        elif isinstance (self, Abstraction):
+            return Abstraction.substitute(self, rules)
+        else:
+            return Application.substitute(self, rules)
+
+
     def reduce(self):
         """Automatically runs the correct reduction function when reduce() is called from LambdaTerm"""
         if isinstance (self, Variable):
